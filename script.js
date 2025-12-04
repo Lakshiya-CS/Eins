@@ -1,80 +1,107 @@
-class Card {
-    #color;
-    #number;
-    #cardId;
-
-    static numCards = 0;
-
-    constructor(color, number){
-        this.#color = color;
-        this.#number = number;
-        this.#cardId = Card.numCards;
-
-        numCards++;
-    }
-}
-
-class Player {
-    #name;
-    hand;
-
-    constructor(name){
-        this.#name = name;
-        this.hand = [];
-    }
-
-    get name(){
-        return this.#name;
-    }
-    playCard(cardId, discard){
-        if (turn = this.name){
-            for (c of hand){
-                if (c.cardId = cardId){
-                    if (discard[0].value == c.value || discard[0].color == c.color){
-                        discard.push(this.hand.splice(this.hand.indexOf(c)));
-                    }
-                }
-            }
-        }
-    }
-    drawCard(deck, turn){
-        if (turn = this.name){
-            this.hand.push(deck.pop());
-        }
-    }
-}
-
 
 let deck = [];
-let player = new Player("Player");
-let com = new Player("Computer");
-let discard = [];
+let stack = [];
+let userHand = [];
+let comHand = [];
+let turn = "user";
 
-colors = ['red', 'blue', 'green', 'yellow']
+function resetBoard() {
+     console.log("Resetting board...");
 
-// populate deck
-for (let i = 0; i < 10; i++){
-    for (color of colors) {
-        deck.push(new Card(color, i));
-        if (i != 0) deck.push(new Card(color, i));
+    deck = buildDeck();
+    shuffleDeck(deck);
+
+    userHand = [];
+    comHand = [];
+    stack = [];
+
+    const STARTING_CARDS = 5;
+    for (let i = 0; i < STARTING_CARDS; i++) {
+        userHand.push(deck.pop());
+        comHand.push(deck.pop());
     }
+
+    stack.push(deck.pop());
+
+    turn = "user";
+
+    displayBoard();
+    updateStatus("Your turn.");
+
 }
 
-// shuffle deck order
-for (let i = deck.length - 1; i > 0; i--){
-    let j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+function displayBoard() {
+    const userDiv = document.getElementById("userHand");
+    const comDiv = document.getElementById("comHand");
+    const deckDiv = document.getElementById("deck");
+    const stackDiv = document.getElementById("stack");
+
+    userDiv.innerHTML = "";
+    comDiv.innerHTML = "";
+    deckDiv.innerHTML = "";
+    stackDiv.innerHTML = "";
+
+    // user hand
+    for (let i = 0; i < userHand.length; i++) {
+        const card = userHand[i];
+        const cardElem = renderCard(card);
+        cardElem.classList.add("user-card");
+
+        // play card 
+        cardElem.onclick = function () {
+            attemptPlayUserCard(i);
+        };
+
+        // dragging
+        cardElem.draggable = true;            
+        cardElem.dataset.index = i;           
+
+        cardElem.addEventListener("dragstart", function (e) {
+            draggedCardIndex = parseInt(e.target.dataset.index);
+        });
+
+        userDiv.appendChild(cardElem);
+    }
+
+    // PC hand
+    for (let i = 0; i < comHand.length; i++) {
+        const back = renderCardBack();
+        comDiv.appendChild(back);
+    }
+
+    // deck
+    if (deck.length > 0) {
+        const back = renderCardBack();
+        deckDiv.appendChild(back);
+    } else {
+        deckDiv.textContent = "No cards";
+    }
+
+    if (stack.length > 0) {
+        const topCard = stack[stack.length - 1];
+        const topElem = renderCard(topCard);
+        stackDiv.appendChild(topElem);
+    }
+
+    // stack drop place/point
+    stackDiv.addEventListener("dragover", function (e) {
+        e.preventDefault(); // allow dropping here
+    });
+
+    stackDiv.addEventListener("drop", function (e) {
+        e.preventDefault();
+        if (draggedCardIndex === null) return;
+
+        attemptPlayUserCard(draggedCardIndex);
+        draggedCardIndex = null;
+    });
 }
 
-console.log(deck);
 
-// initial hand draws
-for (let i = 0; i < 7; i++){
-    player.drawCard(deck);
-    com.drawCard(deck);
+function comTurn() {
+    if (turn !== "com") return;
+
+    // choose card / draw card
+    displayBoard();
+    turn = "user";
 }
-
-console.log("hand1",player.hand);
-console.log("hand2",com.hand);
-
-console.log("Deck length:", deck.length);
