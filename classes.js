@@ -10,7 +10,7 @@ class Card {
         this.#number = number;
         this.#cardId = Card.numCards;
 
-        numCards++;
+       Card.numCards++;
     }
 }
 
