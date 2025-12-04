@@ -5,8 +5,11 @@ let userHand = [];
 let comHand = [];
 let turn = "user";
 
+// for drag & drop
+let draggedCardIndex = null;
+
 function resetBoard() {
-     console.log("Resetting board...");
+    console.log("Resetting board...");
 
     deck = buildDeck();
     shuffleDeck(deck);
@@ -27,7 +30,6 @@ function resetBoard() {
 
     displayBoard();
     updateStatus("Your turn.");
-
 }
 
 function displayBoard() {
@@ -45,16 +47,20 @@ function displayBoard() {
     for (let i = 0; i < userHand.length; i++) {
         const card = userHand[i];
         const cardElem = renderCard(card);
-        cardElem.classList.add("user-card");
 
-        // play card 
+        cardElem.classList.add("player-card");       // base style
+        if (card.color) {
+            cardElem.classList.add(card.color);      // red / blue / green / yellow
+        }
+
+        // click to play
         cardElem.onclick = function () {
             attemptPlayUserCard(i);
         };
 
-        // dragging
-        cardElem.draggable = true;            
-        cardElem.dataset.index = i;           
+        // drag support
+        cardElem.draggable = true;
+        cardElem.dataset.index = i;
 
         cardElem.addEventListener("dragstart", function (e) {
             draggedCardIndex = parseInt(e.target.dataset.index);
@@ -63,7 +69,7 @@ function displayBoard() {
         userDiv.appendChild(cardElem);
     }
 
-    // PC hand
+    // computer hand
     for (let i = 0; i < comHand.length; i++) {
         const back = renderCardBack();
         comDiv.appendChild(back);
@@ -77,13 +83,17 @@ function displayBoard() {
         deckDiv.textContent = "No cards";
     }
 
+    // stack
     if (stack.length > 0) {
         const topCard = stack[stack.length - 1];
         const topElem = renderCard(topCard);
+        topElem.classList.add("player-card");
+        if (topCard.color) {
+            topElem.classList.add(topCard.color);
+        }
         stackDiv.appendChild(topElem);
     }
 
-    // stack drop place/point
     stackDiv.addEventListener("dragover", function (e) {
         e.preventDefault(); // allow dropping here
     });
@@ -97,11 +107,10 @@ function displayBoard() {
     });
 }
 
-
 function comTurn() {
     if (turn !== "com") return;
 
-    // choose card / draw card
+    // (choose card / draw card)
     displayBoard();
     turn = "user";
 }
